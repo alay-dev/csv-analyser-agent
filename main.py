@@ -1,12 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from uuid import uuid4
-
-from nodes import classify_message, router, generate_graph_agent, analytical_response_agent, load_and_analyze_csv, generate_dashboard_entities
-from shared import State
-
-from langgraph.graph import StateGraph, START, END
+from graph_builder import create_graph, initialize_state
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,41 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load and analyze CSV once
-csv_path = "ad_metrics_sample.csv"
-thread_id = str(uuid4())
-
-global_state = State({
-    "thread_id": thread_id,
-    "csv_path": csv_path,
-    "messages": [],
-    "message_type": None
-})
-global_state = load_and_analyze_csv(global_state)
-
-# Compile the LangGraph once
-graph_builder = StateGraph(State)
-graph_builder.add_node("classifier", classify_message)
-graph_builder.add_node("router", router)
-graph_builder.add_node("generate_dashboard", generate_dashboard_entities)
-graph_builder.add_node("generate_graph", generate_graph_agent)
-graph_builder.add_node("analytical_response", analytical_response_agent)
-graph_builder.add_edge(START, "classifier")
-graph_builder.add_edge("classifier", "router")
-graph_builder.add_conditional_edges(
-    "router",
-    lambda state: state.get("next"),
-    {"generate_graph": "generate_graph", "analytical_response": "analytical_response" , "generate_dashboard": "generate_dashboard"}
-)
-graph_builder.add_edge("generate_dashboard", END)
-graph_builder.add_edge("generate_graph", END)
-graph_builder.add_edge("analytical_response", END)
-graph = graph_builder.compile()
-
+# Initialize state and create graph
+global_state = initialize_state("sample.csv")
+graph = create_graph()
 
 class QueryRequest(BaseModel):
     query: str
-
 
 @app.post("/query")
 def query_chatbot(request: QueryRequest):
