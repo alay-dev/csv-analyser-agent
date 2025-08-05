@@ -11,6 +11,9 @@ langchain-google-genai = "*"
 pydantic = "*"
 fastapi = "*"
 uvicorn = "*"
+pymongo = "*"
+motor = "*"
+requests = "*"
 
 [dev-packages]
 

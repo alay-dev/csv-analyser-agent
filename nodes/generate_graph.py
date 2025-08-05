@@ -1,4 +1,4 @@
-from shared import State, llm, MultiChartResponse
+from shared import State, llm, MultiChartResponse, AIMessage
 from langchain.output_parsers import PydanticOutputParser
 
 def generate_graph_agent(state: State):
@@ -38,12 +38,8 @@ Schema:
     # Parse structured response
     result = output_parser.parse(response.content)
 
-    return {
-        "messages": [
-            {
-                "role": "assistant",
-                "type": "CHART",
-                "content": f"{result.model_dump_json(indent=2)}"
-            }
-        ]
-    }
+    ai_message = AIMessage(
+        content=f"{result.model_dump_json(indent=2)}", 
+        additional_kwargs={"type": "CHART"}
+    )
+    return {"messages": [ai_message]}

@@ -1,4 +1,4 @@
-from shared import State, llm, ChartSpec, TableSpec
+from shared import State, llm, ChartSpec, TableSpec, AIMessage
 from typing import Literal, Optional, List
 from pydantic import BaseModel
 from langchain.output_parsers import PydanticOutputParser
@@ -44,7 +44,7 @@ Each entity **must include pixel positioning**:
 
 Spacing Rule:
 Add a minimum vertical gap of 40 pixels between entities (i.e., next_entity.y = previous_entity.y + previous_entity.height + 40).
-Add a minimum vertical gap of 40 pixels between entities (i.e., next_entity.x = previous_entity.x + previous_entity.width + 40).
+Add a minimum horizontal gap of 40 pixels between entities (i.e., next_entity.x = previous_entity.x + previous_entity.width + 40).
 Place components top to bottom, avoiding overlap and ensuring clear separation.
 
 Suggested sizes:
@@ -89,12 +89,8 @@ Only include **insightful** elements:
     response = llm.invoke(messages, config={"thread_id": state["thread_id"]})
     result = output_parser.parse(response.content)
 
-    return {
-        "messages": [
-            {
-                "role": "assistant",
-                "type": "DASHBOARD",
-                "content": f"{result.model_dump_json(indent=2)}"
-            }
-        ]
-    }
+    ai_message = AIMessage(
+        content=f"{result.model_dump_json(indent=2)}", 
+        additional_kwargs={"type": "DASHBOARD"}
+    )
+    return {"messages": [ai_message]}

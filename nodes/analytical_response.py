@@ -1,4 +1,4 @@
-from shared import State, llm
+from shared import State, llm, AIMessage
 
 def analytical_response_agent(state: State):
     last_message = state["messages"][-1]
@@ -58,4 +58,5 @@ Schema:
         }
     ]
     reply = llm.invoke(messages, config={"thread_id": state["thread_id"]})
-    return {"messages": [{"role": "assistant", "type": "TEXT", "content": reply.content}]}
+    ai_message = AIMessage(content=reply.content, additional_kwargs={"type": "TEXT"})
+    return {"messages": [ai_message]}

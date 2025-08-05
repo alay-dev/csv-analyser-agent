@@ -3,6 +3,7 @@ import pandas as pd
 from langgraph.graph.message import add_messages
 from typing_extensions import TypedDict 
 from pydantic import BaseModel
+from langchain_core.messages import AIMessage, HumanMessage
 from llm_config import llm
 
 class State(TypedDict):
