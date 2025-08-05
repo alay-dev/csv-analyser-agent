@@ -44,6 +44,7 @@ Each entity **must include pixel positioning**:
 
 Spacing Rule:
 Add a minimum vertical gap of 40 pixels between entities (i.e., next_entity.y = previous_entity.y + previous_entity.height + 40).
+Add a minimum vertical gap of 40 pixels between entities (i.e., next_entity.x = previous_entity.x + previous_entity.width + 40).
 Place components top to bottom, avoiding overlap and ensuring clear separation.
 
 Suggested sizes:
@@ -67,7 +68,6 @@ Only include **insightful** elements:
 - Add TEXT sections for headers or summaries.
 - Use CHARTS for time trends, category comparisons, or breakdowns.
 - Use TABLES for top-k summaries or aggregated breakdowns.
-- Avoid dumping full raw tables unless valuable.
 
 ---
 
