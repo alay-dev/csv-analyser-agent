@@ -14,6 +14,7 @@ uvicorn = "*"
 pymongo = "*"
 motor = "*"
 requests = "*"
+pandas = "*"
 
 [dev-packages]
 
