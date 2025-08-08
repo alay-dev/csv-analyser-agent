@@ -1,7 +1,7 @@
 from shared import State, llm, MultiChartResponse, AIMessage
 from langchain.output_parsers import PydanticOutputParser
 
-def generate_graph_agent(state: State):
+def generate_chart_agent(state: State):
     last_message = state["messages"][-1]
     schema = state["schema"]
 
@@ -19,9 +19,24 @@ Each chart must:
 - Use one of these chart types only: "LINE", "BAR", or "PIE"
 - Have one x_axis and one y_axis
 - Include inline data from the schema (based on sample rows)
+- `"width"`: pixel width of the component (e.g. 600-1200)
+- `"height"`: pixel height of the component (e.g. 100-600)
+
+
+Suggested sizes:
+- TEXT:
+  - width: 1000-1200
+  - height: 60-100
+- CHART:
+  - width: 600-800
+  - height: 300-500
+- TABLE:
+  - width: 800-1000
+  - height: 400-600
 
 Your response must follow this Pydantic schema:
 {output_parser.get_format_instructions()}
+
 
 Schema:
 {schema}

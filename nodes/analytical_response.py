@@ -46,7 +46,7 @@ All insights must be grounded in the actual schema or sample data — do not gue
 ---
 
 Dataset context below.  
-Use only the following schema and sample data to form your answers:
+Use only the following schema and data to form your answers:
 
 Schema:  
 {schema}

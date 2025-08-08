@@ -1,5 +1,5 @@
 from uuid import uuid4
-from nodes import router, generate_graph_agent, analytical_response_agent, load_and_analyze_csv, generate_dashboard_entities, classify_message
+from nodes import router, generate_chart_agent, analytical_response_agent, load_and_analyze_csv, generate_dashboard_entities, classify_message
 from shared import State
 from langgraph.graph import StateGraph, START, END
 
@@ -9,7 +9,7 @@ def create_graph():
     graph_builder.add_node("classifier", classify_message)
     graph_builder.add_node("router", router)
     graph_builder.add_node("generate_dashboard", generate_dashboard_entities)
-    graph_builder.add_node("generate_graph", generate_graph_agent)
+    graph_builder.add_node("generate_graph", generate_chart_agent)
     graph_builder.add_node("analytical_response", analytical_response_agent)
     graph_builder.add_edge(START, "classifier")
     graph_builder.add_edge("classifier", "router")
@@ -23,7 +23,7 @@ def create_graph():
     graph_builder.add_edge("analytical_response", END)
     return graph_builder.compile()
 
-def initialize_state(csv_path="sample.csv"):
+def initialize_state(csv_path):
     # Create initial state
     thread_id = str(uuid4())
     

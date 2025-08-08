@@ -40,7 +40,7 @@ class SessionManager:
         logger.info("🧹 SessionManager cleanup (no database connections to close)")
         self._active_sessions.clear()
     
-    async def create_session(self, session_id: Optional[str] = None, csv_path: str = "sample.csv") -> str:
+    async def create_session(self, csv_path: str, session_id: Optional[str] = None,) -> str:
         """Create a new session identifier and associate it with a CSV path"""
         logger.info(f"📝 Creating new session with CSV: {csv_path}")
         

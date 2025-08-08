@@ -59,8 +59,8 @@ async def create_session(request: SessionCreateRequest):
     logger.info(f"📝 API request to create session with CSV: {request.csv_path}")
     try:
         session_id = await session_manager.create_session(
-            session_id=request.session_id,
-            csv_path=request.csv_path
+            csv_path=request.csv_path,
+            session_id=request.session_id
         )
         logger.info(f"✅ Session creation API completed: {session_id}")
         return SessionResponse(
@@ -120,8 +120,8 @@ async def query_chatbot(request: QueryRequest):
         if not current_state:
             logger.info(f"🔄 Session {session_id} not found, creating new session")
             session_id = await session_manager.create_session(
-                session_id=session_id,
-                csv_path=request.csv_path
+                csv_path=request.csv_path,
+                session_id=session_id
             )
             current_state = await session_manager.get_session_with_messages(
                 session_id, 

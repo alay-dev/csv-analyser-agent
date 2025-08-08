@@ -20,6 +20,8 @@ class ChartSpec(BaseModel):
     chart_type: Literal["LINE", "BAR", "PIE"]
     x_axis: List[str]  
     y_axis: List[str]  
+    width: int 
+    height: int  
     data: List[Dict[str, Union[str, float, int]]]
 
 class MultiChartResponse(BaseModel):
