@@ -3,6 +3,18 @@ from shared import State, llm, AIMessage
 def analytical_response_agent(state: State):
     last_message = state["messages"][-1]
     schema = state["schema"]
+    
+    # Get conversation history (excluding the last message which will be added separately)
+    conversation_history = state["messages"][:-1] if len(state["messages"]) > 1 else []
+    
+    # Build conversation context from previous messages
+    conversation_context = ""
+    if conversation_history:
+        conversation_context = "\n\n--- Previous Conversation ---\n"
+        for msg in conversation_history:
+            role = "User" if hasattr(msg, 'type') and msg.type == "human" else "Assistant"
+            conversation_context += f"{role}: {msg.content}\n"
+        conversation_context += "--- End Previous Conversation ---\n\n"
 
     messages = [
         {"role": "system",
@@ -42,6 +54,7 @@ All insights must be grounded in the actual schema or sample data — do not gue
 - Do not format the response as a table
 - Mention relevant column names when possible
 - Do not fabricate values — use only what is in the schema or sample rows
+- Reference previous conversation context when relevant to provide continuity
 
 ---
 
@@ -50,7 +63,8 @@ Use only the following schema and data to form your answers:
 
 Schema:  
 {schema}
-"""
+
+{conversation_context}"""
          },
         {
             "role": "user",
@@ -58,5 +72,5 @@ Schema:
         }
     ]
     reply = llm.invoke(messages, config={"thread_id": state["thread_id"]})
-    ai_message = AIMessage(content=reply.content, additional_kwargs={"type": "TEXT"})
+    ai_message = AIMessage(content=reply.content, additional_kwargs={"message_type": "TEXT"})
     return {"messages": [ai_message]}

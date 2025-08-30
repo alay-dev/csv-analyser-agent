@@ -1,57 +1,64 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, List
+import uvicorn
+from session_manager import session_manager
 from graph_builder import create_graph
-from session_manager import session_manager, convert_message_to_dict
-from dotenv import load_dotenv
-from typing import Optional
-from contextlib import asynccontextmanager
+from logging_config import get_logger
 import asyncio
-import os
-from logging_config import setup_logging, get_logger
 
-load_dotenv()
-
-# Set up logging based on environment variable
-log_level = os.getenv("LOG_LEVEL", "INFO")
-setup_logging(level=log_level, format_style="detailed")
 logger = get_logger(__name__)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("🚀 FastAPI server starting up...")
-    logger.info("💡 Running in stateless mode - sessions initialized from CSV files")
-    yield
-    # Shutdown
-    logger.info("🛑 FastAPI server shutting down...")
-    await session_manager.disconnect()
+# Create graph instance
+graph = create_graph()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title="CSV Analyzer Agent", version="1.0.0")
 
-# Optional CORS middleware if calling from browser or frontend
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create graph once (stateless)
-graph = create_graph()
-
-class QueryRequest(BaseModel):
-    query: str
-    session_id: Optional[str] = None
-    csv_path: Optional[str] = "sample.csv"
-
+# Request/Response models
 class SessionCreateRequest(BaseModel):
-    csv_path: Optional[str] = "sample.csv"
+    csv_path: str
     session_id: Optional[str] = None
 
 class SessionResponse(BaseModel):
     session_id: str
     message: str
+
+class QueryRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = None
+    csv_path: str = "sample.csv"
+
+# Startup and shutdown events
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database connection on startup"""
+    logger.info("🚀 Starting CSV Analyzer Agent...")
+    try:
+        await session_manager.connect()
+        logger.info("✅ Database connection established")
+    except Exception as e:
+        logger.error(f"❌ Failed to establish database connection: {str(e)}")
+        raise
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup database connection on shutdown"""
+    logger.info("🛑 Shutting down CSV Analyzer Agent...")
+    try:
+        await session_manager.disconnect()
+        logger.info("✅ Database connection closed")
+    except Exception as e:
+        logger.error(f"❌ Error during shutdown: {str(e)}")
 
 @app.post("/session/create", response_model=SessionResponse)
 async def create_session(request: SessionCreateRequest):
@@ -146,7 +153,7 @@ async def query_chatbot(request: QueryRequest):
         # Return response
         if updated_state.get("messages"):
             last_msg = updated_state["messages"][-1]
-            response_type = last_msg.additional_kwargs.get("type", "TEXT")
+            response_type = last_msg.additional_kwargs.get("message_type", "TEXT")
             logger.info(f"✅ Query processed successfully. Response type: {response_type}")
             return {
                 "response": last_msg.content,
@@ -167,17 +174,15 @@ async def query_chatbot(request: QueryRequest):
         raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
 
 @app.get("/session/{session_id}/history")
-async def get_session_history(session_id: str, csv_path: Optional[str] = "sample.csv"):
-    """Get conversation history for a session (stateless mode - returns fresh state)"""
+async def get_session_history(session_id: str):
+    """Get conversation history for a session from database"""
     try:
-        # In stateless mode, we can only return the fresh initialized state
-        # No conversation history is persisted
-        messages = await session_manager.get_session_messages_as_dicts(session_id, csv_path=csv_path)
+        messages = await session_manager.get_session_messages_as_dicts(session_id)
         
         return {
             "session_id": session_id,
             "messages": messages,
-            "note": "Stateless mode: Only fresh session state returned, no conversation history persisted"
+            "note": "Stateful mode: Full conversation history retrieved from database"
         }
     except HTTPException:
         raise

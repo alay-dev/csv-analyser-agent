@@ -8,6 +8,7 @@ from llm_config import llm
 
 class State(TypedDict):
     thread_id: str
+    session_id: Optional[str]
     messages: Annotated[list, add_messages]
     message_type: str | None
     csv_path: str

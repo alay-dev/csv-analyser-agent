@@ -201,3 +201,6 @@ curl -X POST "http://localhost:8000/query" \
 ## Migration from Previous Version
 
 The API is backward compatible. If you don't provide a `session_id` in your `/query` requests, a new session will be automatically created for each request. To maintain conversation context, make sure to use the `session_id` returned in the response for subsequent queries.
+
+
+pipenv run uvicorn main:app --reload
